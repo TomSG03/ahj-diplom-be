@@ -1,13 +1,17 @@
 const http = require('http');
 const Koa = require('koa');
-const koaBody = require('koa-body');
 const cors = require('koa2-cors');
-const Tickets = require('./src/hdesk-ticket');
-const Router = require('koa-router');
+const uuid = require('uuid');
 
+const WS = require('ws');
 const app = new Koa();
-const tickets = new Tickets();
-const router = new Router();
+
+const Clients = require('./clients');
+const clients = new Clients();
+
+const port = process.env.PORT || 7070;
+const server = http.createServer(app.callback());
+const wsServer = new WS.Server({ server });
 
 app.use(
   cors({
@@ -18,58 +22,38 @@ app.use(
   })
 );
 
-app.use(koaBody({
-  json: true, 
-  text: true, 
-  urlencoded: true 
-}));
+wsServer.on('connection', (ws) => {
+  const id = uuid.v4();
+  ws.on('message', (msg) => {
+    const request = JSON.parse(msg);
+    switch (request.event) {
+      case 'connected':
+        if (clients.checkNikName(request.message)) {
+          ws.close(1000, 'Выберите другое имя');
+        } else {
+          ws.name = request.message;
+          clients.items[id] = ws;
+          clients.sendValidOk(ws);
+          clients.sendOldMsg(ws);
+          clients.sendAllClientEvent('connect');
+        }
+        break;
+      case 'message':
+        clients.sendAllNewMsg(request.message);
+        clients.message.push({ ['nikName']: clients.items[id].name, ['message']: request.message });
+        console.log(clients.message);
+        break
+      default:
+        break;
+    }
+  });
 
-router.get('/ahj-hdesk/tickets', async (ctx) => {
-  const { method } = ctx.request.query;
-  switch (method) {
-    case 'allTickets':
-      ctx.response.body = tickets.allTickets();
-      break;
-    case 'ticketById':
-      ctx.response.body = tickets.ticketById(ctx.request.query.id);
-      break;
-    default:
-      ctx.response.status = 404;
-      break;
-  }
+  ws.on('close', () => {
+    if (typeof clients.items[id] !== "undefined") {
+      delete clients.items[id];
+      clients.sendAllClientEvent('disconnect');
+    }
+  });
 });
 
-router.post('/ahj-hdesk/tickets', async (ctx) => {
-  ctx.response.body = ctx.request.body;
-  const { method } = ctx.request.query;
-  if (method === 'createTicket') {
-    const { name, description } = ctx.request.body;
-    tickets.createTicket(name, description);
-    ctx.response.status = 204;
-  }
-});
-
-router.delete('/ahj-hdesk/tickets/:id', async (ctx) => {
-  const ticketId = Number(ctx.params.id);
-  tickets.deleteTicket(ticketId);
-  ctx.response.status = 204;
-});
-
-router.put('/ahj-hdesk/tickets/:id', async (ctx) => {
-  const ticketId = Number(ctx.params.id);
-  const { name, description } = ctx.request.body;
-  if (!name || !description) {
-    tickets.changeStatus(ticketId);
-  } else {
-    tickets.editTicket(ticketId, name, description);
-  }
-  ctx.response.status = 204;
-});
-
-app
-  .use(router.routes())
-  .use(router.allowedMethods());
-
-const port = process.env.PORT || 7070;
-const server = http.createServer(app.callback());
-server.listen(port, () => console.log('Server started'));
+server.listen(port, () => console.log(`Server has been started on ${port}...`));
