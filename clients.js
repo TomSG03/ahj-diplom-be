@@ -20,13 +20,12 @@ module.exports = class Clients {
     ws.send(JSON.stringify({ event: 'connect', message: ws.name }));
   }
 
-  sendAllClientEvent(event) {
+  sendAllClientEvent() {
     const list = this.getClientList();
     for (const key in this.items) {
       const chatEvent = JSON.stringify({
         event: 'system',
         message: {
-          action: event,
           users: list,
         },
       });
@@ -34,15 +33,15 @@ module.exports = class Clients {
     }
   }
 
-  sendAllNewMsg(message) {
+  sendAllNewMsg(rec) {
     const list = this.getClientList();
     for (const key in this.items) {
       const chatEvent = JSON.stringify({
         event: 'message',
         message: {
-          name: this.items[key].name,
-          date: new Date(),
-          text: message,
+          name: rec.name,
+          date: rec.date,
+          text: rec.message,
         },
       });
       this.items[key].send(chatEvent);
@@ -55,7 +54,7 @@ module.exports = class Clients {
         event: 'message',
         message: {
           name: e.nikName,
-          date: new Date(),
+          date: e.date,
           text: e.message,
         },
       });

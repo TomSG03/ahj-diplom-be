@@ -35,13 +35,12 @@ wsServer.on('connection', (ws) => {
           clients.items[id] = ws;
           clients.sendValidOk(ws);
           clients.sendOldMsg(ws);
-          clients.sendAllClientEvent('connect');
+          clients.sendAllClientEvent();
         }
         break;
       case 'message':
-        clients.sendAllNewMsg(request.message);
-        clients.message.push({ ['nikName']: clients.items[id].name, ['message']: request.message });
-        console.log(clients.message);
+        clients.sendAllNewMsg(request);
+        clients.message.push({ ['nikName']: clients.items[id].name, ['message']: request.message, ['date']: request.date });
         break
       default:
         break;
@@ -51,7 +50,7 @@ wsServer.on('connection', (ws) => {
   ws.on('close', () => {
     if (typeof clients.items[id] !== "undefined") {
       delete clients.items[id];
-      clients.sendAllClientEvent('disconnect');
+      clients.sendAllClientEvent();
     }
   });
 });
