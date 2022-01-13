@@ -13,6 +13,8 @@ const port = process.env.PORT || 7070;
 const server = http.createServer(app.callback());
 const wsServer = new WS.Server({ server });
 
+
+
 app.use(
   cors({
     origin: '*',
@@ -28,20 +30,26 @@ wsServer.on('connection', (ws) => {
     const request = JSON.parse(msg);
     switch (request.event) {
       case 'connected':
-        if (clients.checkNikName(request.message)) {
-          ws.close(1000, 'Выберите другое имя');
-        } else {
-          ws.name = request.message;
-          clients.items[id] = ws;
-          clients.sendValidOk(ws);
-          clients.sendOldMsg(ws);
-          clients.sendAllClientEvent();
-        }
+        clients.items[id] = ws;
+        clients.sendValidOk(ws);
+        clients.sendOldMsg(ws);
         break;
       case 'message':
-        clients.sendAllNewMsg(request);
-        clients.message.push({ ['nikName']: clients.items[id].name, ['message']: request.message, ['date']: request.date });
-        break
+        clients.message.push({
+          ['id']: clients.idMessage,
+          ['type']: request.type, 
+          ['message']: request.message, 
+          ['messageName']: request.messageName, 
+          ['date']: request.date 
+        });
+        clients.idMessage += 1;
+        clients.sendNewMsg(clients.message[clients.message.length - 1])
+        break;
+      case 'delete':
+        const index = clients.message.findIndex((el) => el.id === Number(request.idDelete));
+        clients.message.splice(index, 1);
+        clients.sendDelete(request.idDelete);
+        break;
       default:
         break;
     }
@@ -50,7 +58,6 @@ wsServer.on('connection', (ws) => {
   ws.on('close', () => {
     if (typeof clients.items[id] !== "undefined") {
       delete clients.items[id];
-      clients.sendAllClientEvent();
     }
   });
 });

@@ -1,47 +1,24 @@
 module.exports = class Clients {
   constructor(server) {
-    this.items = {};
     this.message = [];
-  }
-
-  checkNikName(message) {
-    let userLogged = false;
-    if (Object.keys(this.items).length > 0) {
-      for (const key in this.items) {
-        if (this.items[key].name === message) {
-          userLogged = true;
-        }
-      }
-    }
-    return userLogged;
+    this.items = {};
+    this.idMessage = 0;
   }
 
   sendValidOk(ws) {
-    ws.send(JSON.stringify({ event: 'connect', message: ws.name }));
+    ws.send(JSON.stringify({ event: 'connect', message: 'ok' }));
   }
 
-  sendAllClientEvent() {
-    const list = this.getClientList();
-    for (const key in this.items) {
-      const chatEvent = JSON.stringify({
-        event: 'system',
-        message: {
-          users: list,
-        },
-      });
-      this.items[key].send(chatEvent);
-    }
-  }
-
-  sendAllNewMsg(rec) {
-    const list = this.getClientList();
+  sendNewMsg(rec) {
     for (const key in this.items) {
       const chatEvent = JSON.stringify({
         event: 'message',
         message: {
-          name: rec.name,
+          id: rec.id,
+          type: rec.type,
           date: rec.date,
-          text: rec.message,
+          message: rec.message,
+          messageName: rec.messageName,
         },
       });
       this.items[key].send(chatEvent);
@@ -53,20 +30,24 @@ module.exports = class Clients {
       const chatEvent = JSON.stringify({
         event: 'message',
         message: {
-          name: e.nikName,
-          date: e.date,
-          text: e.message,
+          id: e.id,
+          type: e.type,
+          message: e.message,
+          messageName: e.messageName,
+          date: e.date,          
         },
       });
       ws.send(chatEvent);
     })
   }
 
-  getClientList() {
-    const list = [];
+  sendDelete(idDelete) {
     for (const key in this.items) {
-      list.push(this.items[key].name)
-    };
-    return list
+      const chatEvent = JSON.stringify({
+        event: 'delete',
+        idDelete: idDelete,
+      });
+      this.items[key].send(chatEvent);
+    }
   }
 }
