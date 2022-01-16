@@ -17,6 +17,7 @@ module.exports = class Clients {
           id: rec.id,
           type: rec.type,
           date: rec.date,
+          geo: rec.geo,
           message: rec.message,
           messageName: rec.messageName,
         },
@@ -34,6 +35,7 @@ module.exports = class Clients {
           type: e.type,
           message: e.message,
           messageName: e.messageName,
+          geo: e.geo,
           date: e.date,          
         },
       });

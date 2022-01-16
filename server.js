@@ -40,6 +40,7 @@ wsServer.on('connection', (ws) => {
           ['type']: request.type, 
           ['message']: request.message, 
           ['messageName']: request.messageName, 
+          ['geo']: request.geo,
           ['date']: request.date 
         });
         clients.idMessage += 1;
