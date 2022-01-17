@@ -20,6 +20,7 @@ module.exports = class Clients {
           geo: rec.geo,
           message: rec.message,
           messageName: rec.messageName,
+          favorite: rec.favorite,
         },
       });
       this.items[key].send(chatEvent);
@@ -36,20 +37,42 @@ module.exports = class Clients {
           message: e.message,
           messageName: e.messageName,
           geo: e.geo,
-          date: e.date,          
+          date: e.date,
+          favorite: e.favorite,
         },
       });
       ws.send(chatEvent);
     })
   }
 
-  sendDelete(idDelete) {
+  sendEvent(obj) {
     for (const key in this.items) {
       const chatEvent = JSON.stringify({
-        event: 'delete',
-        idDelete: idDelete,
+        event: obj.event,
+        id: obj.id,
+        value: obj.value,
       });
       this.items[key].send(chatEvent);
     }
+  }
+
+  sendAllFavorite(ws) {
+    this.message.forEach((e) => {
+      if (e.favorite === 'yes') {
+        const chatEvent = JSON.stringify({
+          event: 'favoriteAll',
+          message: {
+            id: e.id,
+            type: e.type,
+            message: e.message,
+            messageName: e.messageName,
+            geo: e.geo,
+            date: e.date,
+            favorite: e.favorite,
+          },
+        });
+        ws.send(chatEvent);
+      }
+    })
   }
 }

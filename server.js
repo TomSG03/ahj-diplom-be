@@ -7,6 +7,7 @@ const WS = require('ws');
 const app = new Koa();
 
 const Clients = require('./clients');
+const Func = require('./func');
 const clients = new Clients();
 
 const port = process.env.PORT || 7070;
@@ -41,15 +42,39 @@ wsServer.on('connection', (ws) => {
           ['message']: request.message, 
           ['messageName']: request.messageName, 
           ['geo']: request.geo,
-          ['date']: request.date 
+          ['date']: request.date,
+          ['favorite']: request.favorite,
         });
         clients.idMessage += 1;
         clients.sendNewMsg(clients.message[clients.message.length - 1])
         break;
       case 'delete':
-        const index = clients.message.findIndex((el) => el.id === Number(request.idDelete));
-        clients.message.splice(index, 1);
-        clients.sendDelete(request.idDelete);
+        clients.message.splice(Func.indexItem(clients.message, request.id), 1);
+        clients.sendEvent({ 
+          event: 'delete', 
+          id: request.id,
+          value: 0,
+        });
+          break;
+      case 'deleteAll':
+        clients.message = [];
+        clients.sendEvent({ 
+          event: 'deleteAll', 
+          id: 0,
+          value: 0,
+        });
+        break;
+      case 'favorite':
+        const index = Func.indexItem(clients.message, request.id);
+        clients.message[Func.indexItem(clients.message, request.id)].favorite = request.value;
+        clients.sendEvent({
+          event: 'favorite',
+          id: request.id,
+          value: clients.message[Func.indexItem(clients.message, request.id)].favorite,
+        });
+        break;
+      case 'getFavoriteAll':
+        clients.sendAllFavorite(ws);
         break;
       default:
         break;
