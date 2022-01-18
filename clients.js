@@ -75,4 +75,26 @@ module.exports = class Clients {
       }
     })
   }
+
+  sendGroup(ws, rec) {
+    this.message.forEach((e) => {
+      const regexp = new RegExp(`${rec.value}`, 'g')
+      if (e.type.match(regexp)) {
+        const chatEvent = JSON.stringify({
+          event: rec.event,
+          message: {
+            id: e.id,
+            type: e.type,
+            message: e.message,
+            messageName: e.messageName,
+            geo: e.geo,
+            date: e.date,
+            favorite: e.favorite,
+          },
+        });
+        console.log('send');
+        ws.send(chatEvent);
+      }
+    })
+  }
 }

@@ -47,6 +47,7 @@ wsServer.on('connection', (ws) => {
         });
         clients.idMessage += 1;
         clients.sendNewMsg(clients.message[clients.message.length - 1])
+        console.log(clients.message[clients.message.length - 1].type);
         break;
       case 'delete':
         clients.message.splice(Func.indexItem(clients.message, request.id), 1);
@@ -73,10 +74,13 @@ wsServer.on('connection', (ws) => {
           value: clients.message[Func.indexItem(clients.message, request.id)].favorite,
         });
         break;
-      case 'getFavoriteAll':
-        clients.sendAllFavorite(ws);
-        break;
-      default:
+        case 'getFavoriteAll':
+          clients.sendAllFavorite(ws);
+          break;
+        default:
+        case 'getGroup':
+          clients.sendGroup(ws, request);
+          break;
         break;
     }
   });
