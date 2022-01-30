@@ -6,15 +6,15 @@ const uuid = require('uuid');
 const WS = require('ws');
 const app = new Koa();
 
+const ChaosBot = require('./chaosBot');
 const Clients = require('./clients');
 const Func = require('./func');
 const clients = new Clients();
+const bot = new ChaosBot(clients);
 
 const port = process.env.PORT || 7070;
 const server = http.createServer(app.callback());
 const wsServer = new WS.Server({ server });
-
-
 
 app.use(
   cors({
@@ -33,34 +33,37 @@ wsServer.on('connection', (ws) => {
       case 'connected':
         clients.items[id] = ws;
         clients.sendValidOk(ws);
-        clients.sendOldMsg(ws);
+        clients.sendOldMsg(ws, 'message');
         break;
       case 'message':
         clients.message.push({
+          ['source']: 'user',
           ['id']: clients.idMessage,
-          ['type']: request.type, 
-          ['message']: request.message, 
-          ['messageName']: request.messageName, 
+          ['type']: request.type,
+          ['message']: request.message,
+          ['messageName']: request.messageName,
           ['geo']: request.geo,
           ['date']: request.date,
           ['favorite']: request.favorite,
         });
         clients.idMessage += 1;
-        clients.sendNewMsg(clients.message[clients.message.length - 1])
-        console.log(clients.message[clients.message.length - 1].type);
+        clients.sendNewMsg(clients.message[clients.message.length - 1], 'message')
+        if (/^@chaos:/g.test(request.message)) {
+          bot.commandFind(request.message);
+        }
         break;
       case 'delete':
         clients.message.splice(Func.indexItem(clients.message, request.id), 1);
-        clients.sendEvent({ 
-          event: 'delete', 
+        clients.sendEvent({
+          event: 'delete',
           id: request.id,
           value: 0,
         });
-          break;
+        break;
       case 'deleteAll':
         clients.message = [];
-        clients.sendEvent({ 
-          event: 'deleteAll', 
+        clients.sendEvent({
+          event: 'deleteAll',
           id: 0,
           value: 0,
         });
@@ -74,13 +77,16 @@ wsServer.on('connection', (ws) => {
           value: clients.message[Func.indexItem(clients.message, request.id)].favorite,
         });
         break;
-        case 'getFavoriteAll':
-          clients.sendAllFavorite(ws);
-          break;
-        default:
-        case 'getGroup':
-          clients.sendGroup(ws, request);
-          break;
+      case 'getFavoriteAll':
+        clients.sendAllFavorite(ws);
+        break;
+      case 'getGroup':
+        clients.sendGroup(ws, request);
+        break;
+      case 'search':
+        clients.search(ws, request);
+        break;
+      default:
         break;
     }
   });

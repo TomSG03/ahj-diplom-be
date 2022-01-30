@@ -3,45 +3,53 @@ module.exports = class Clients {
     this.message = [];
     this.items = {};
     this.idMessage = 0;
+    this.idMessageBot = 0;
   }
 
   sendValidOk(ws) {
     ws.send(JSON.stringify({ event: 'connect', message: 'ok' }));
   }
 
-  sendNewMsg(rec) {
+  jsonStr(obj, event) {
+    return JSON.stringify({
+      event: event,
+      message: {
+        source: obj.source,
+        id: obj.id,
+        type: obj.type,
+        date: obj.date,
+        geo: obj.geo,
+        message: obj.message,
+        messageName: obj.messageName,
+        favorite: obj.favorite,
+      },
+    });
+  }
+
+  sendNewMsg(rec, event) {
     for (const key in this.items) {
-      const chatEvent = JSON.stringify({
-        event: 'message',
-        message: {
-          id: rec.id,
-          type: rec.type,
-          date: rec.date,
-          geo: rec.geo,
-          message: rec.message,
-          messageName: rec.messageName,
-          favorite: rec.favorite,
-        },
-      });
-      this.items[key].send(chatEvent);
+      this.items[key].send(this.jsonStr(rec, event));
     }
   }
 
-  sendOldMsg(ws) {
+  sendOldMsg(ws, event) {
+    this.message.forEach((e) => ws.send(this.jsonStr(e, event)));
+  }
+
+  sendAllFavorite(ws) {
     this.message.forEach((e) => {
-      const chatEvent = JSON.stringify({
-        event: 'message',
-        message: {
-          id: e.id,
-          type: e.type,
-          message: e.message,
-          messageName: e.messageName,
-          geo: e.geo,
-          date: e.date,
-          favorite: e.favorite,
-        },
-      });
-      ws.send(chatEvent);
+      if (e.favorite === 'yes') {
+        ws.send(this.jsonStr(e, 'favoriteAll'));
+      }
+    })
+  }
+
+  sendGroup(ws, rec) {
+    this.message.forEach((e) => {
+      const regexp = new RegExp(`${rec.value}`, 'g')
+      if (e.type.match(regexp)) {
+        ws.send(this.jsonStr(e, rec.event));
+      }
     })
   }
 
@@ -56,45 +64,15 @@ module.exports = class Clients {
     }
   }
 
-  sendAllFavorite(ws) {
+  search(ws, rec) {
     this.message.forEach((e) => {
-      if (e.favorite === 'yes') {
-        const chatEvent = JSON.stringify({
-          event: 'favoriteAll',
-          message: {
-            id: e.id,
-            type: e.type,
-            message: e.message,
-            messageName: e.messageName,
-            geo: e.geo,
-            date: e.date,
-            favorite: e.favorite,
-          },
-        });
-        ws.send(chatEvent);
+      if (rec.value !== '' && e.message.indexOf(rec.value) !== -1) {
+        ws.send(this.jsonStr(e, 'search'));
       }
     })
   }
 
-  sendGroup(ws, rec) {
-    this.message.forEach((e) => {
-      const regexp = new RegExp(`${rec.value}`, 'g')
-      if (e.type.match(regexp)) {
-        const chatEvent = JSON.stringify({
-          event: rec.event,
-          message: {
-            id: e.id,
-            type: e.type,
-            message: e.message,
-            messageName: e.messageName,
-            geo: e.geo,
-            date: e.date,
-            favorite: e.favorite,
-          },
-        });
-        console.log('send');
-        ws.send(chatEvent);
-      }
-    })
+  sendBotAnswer(obj, event) {
+
   }
 }
