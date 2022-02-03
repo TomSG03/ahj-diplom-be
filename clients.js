@@ -6,8 +6,8 @@ module.exports = class Clients {
     this.idMessageBot = 0;
   }
 
-  sendValidOk(ws) {
-    ws.send(JSON.stringify({ event: 'connect', message: 'ok' }));
+  sendValidOk(ws, count) {
+    ws.send(JSON.stringify({ event: 'connect', message: 'ok', noSendMsg: count }));
   }
 
   jsonStr(obj, event) {
@@ -34,6 +34,11 @@ module.exports = class Clients {
 
   sendOldMsg(ws, event) {
     this.message.forEach((e) => ws.send(this.jsonStr(e, event)));
+  }
+
+  sendNoSendMsg(ws, count) {
+    const index = this.message.length - count;
+    ws.send(this.jsonStr(this.message[count - 1], 'noSendMsg'));
   }
 
   sendAllFavorite(ws) {
@@ -66,13 +71,9 @@ module.exports = class Clients {
 
   search(ws, rec) {
     this.message.forEach((e) => {
-      if (rec.value !== '' && e.message.indexOf(rec.value) !== -1) {
+      if (rec.value !== '' && (e.type === 'txt' || e.type === 'link') && e.message.indexOf(rec.value) !== -1) {
         ws.send(this.jsonStr(e, 'search'));
       }
     })
-  }
-
-  sendBotAnswer(obj, event) {
-
   }
 }

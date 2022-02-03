@@ -32,8 +32,9 @@ wsServer.on('connection', (ws) => {
     switch (request.event) {
       case 'connected':
         clients.items[id] = ws;
-        clients.sendValidOk(ws);
-        clients.sendOldMsg(ws, 'message');
+        clients.items[id].noSendMsg = clients.message.length;
+        clients.sendValidOk(ws, clients.items[id].noSendMsg);
+        clients.sendOldMsg(ws, 'oldMessage');
         break;
       case 'message':
         clients.message.push({
@@ -47,11 +48,14 @@ wsServer.on('connection', (ws) => {
           ['favorite']: request.favorite,
         });
         clients.idMessage += 1;
-        clients.sendNewMsg(clients.message[clients.message.length - 1], 'message')
+        clients.sendNewMsg(clients.message[clients.message.length - 1], 'newMessage')
         if (/^@chaos:/g.test(request.message)) {
           bot.commandFind(request.message);
         }
         break;
+      case 'noSendMsg':
+        clients.sendNoSendMsg(ws, request.value);
+        break
       case 'delete':
         clients.message.splice(Func.indexItem(clients.message, request.id), 1);
         clients.sendEvent({
