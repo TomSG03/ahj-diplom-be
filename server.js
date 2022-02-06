@@ -9,8 +9,10 @@ const app = new Koa();
 const ChaosBot = require('./chaosBot');
 const Clients = require('./clients');
 const Func = require('./func');
+const InitMessage = require('./initMessage');
 const clients = new Clients();
 const bot = new ChaosBot(clients);
+const init = new InitMessage(clients);
 
 const port = process.env.PORT || 7070;
 const server = http.createServer(app.callback());
@@ -42,7 +44,7 @@ wsServer.on('connection', (ws) => {
           ['id']: clients.idMessage,
           ['type']: request.type,
           ['message']: request.message,
-          ['messageName']: request.messageName,
+          ['messageName']: request.messageName || '',
           ['geo']: request.geo,
           ['date']: request.date,
           ['favorite']: request.favorite,

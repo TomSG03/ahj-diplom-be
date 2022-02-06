@@ -86,7 +86,7 @@ module.exports = class ChaosBot {
       ['date']: Func.getTime(),
       ['favorite']: 'no',
     });
-    this.clients.sendNewMsg(this.clients.message[this.clients.message.length - 1], 'message')
+    this.clients.sendNewMsg(this.clients.message[this.clients.message.length - 1], 'newMessage')
   }
 
   sendRandom(obj) {
@@ -100,7 +100,7 @@ module.exports = class ChaosBot {
       ['date']: Func.getTime(),
       ['favorite']: 'no',
     });
-    this.clients.sendNewMsg(this.clients.message[this.clients.message.length - 1], 'message')
+    this.clients.sendNewMsg(this.clients.message[this.clients.message.length - 1], 'newMessage')
   }
 
   sendFuncIn(arrFunc) {
@@ -123,7 +123,7 @@ module.exports = class ChaosBot {
       ['date']: Func.getTime(),
       ['favorite']: 'no',
     });
-    this.clients.sendNewMsg(this.clients.message[this.clients.message.length - 1], 'message')
+    this.clients.sendNewMsg(this.clients.message[this.clients.message.length - 1], 'newMessage')
 
   }
 

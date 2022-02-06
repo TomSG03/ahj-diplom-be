@@ -3,7 +3,6 @@ module.exports = class Clients {
     this.message = [];
     this.items = {};
     this.idMessage = 0;
-    this.idMessageBot = 0;
   }
 
   sendValidOk(ws, count) {
@@ -50,12 +49,25 @@ module.exports = class Clients {
   }
 
   sendGroup(ws, rec) {
+    const other = []
+    let otherFl = 'yes';
+
+    const regexp = new RegExp(`${rec.value}`, 'g');
     this.message.forEach((e) => {
-      const regexp = new RegExp(`${rec.value}`, 'g')
       if (e.type.match(regexp)) {
         ws.send(this.jsonStr(e, rec.event));
+        otherFl = 'no'
       }
     })
+    if (otherFl === 'yes') {
+      this.message.forEach((e) => {
+        if (!/txt/.test(e.type) && !/link/.test(e.type) && !/video/.test(e.type) && !/audio/.test(e.type) && !/image/.test(e.type)) {
+          other.push(e);
+        }
+      })
+      other.forEach((e) => ws.send(this.jsonStr(e, rec.event)))
+    } else {
+    }
   }
 
   sendEvent(obj) {
@@ -70,10 +82,18 @@ module.exports = class Clients {
   }
 
   search(ws, rec) {
+    const recLow = rec.value.toLowerCase().trim();
     this.message.forEach((e) => {
-      if (rec.value !== '' && (e.type === 'txt' || e.type === 'link') && e.message.indexOf(rec.value) !== -1) {
-        ws.send(this.jsonStr(e, 'search'));
+      const eLow = e.message.toLowerCase();
+      const eLowName = e.messageName.toLowerCase();
+      if (recLow !== '') {
+        if ((e.type === 'txt' || e.type === 'link') && eLow.includes(recLow)) {
+          ws.send(this.jsonStr(e, 'search'));
+        } else if (eLowName.indexOf(recLow) !== -1) {
+          ws.send(this.jsonStr(e, 'search'));
+        }
       }
-    })
+    }
+    )
   }
 }
