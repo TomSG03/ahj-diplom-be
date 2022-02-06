@@ -3,6 +3,8 @@ module.exports = class Clients {
     this.message = [];
     this.items = {};
     this.idMessage = 0;
+
+    this.knowGroup = ['txt', 'link', 'image', 'video', 'audio'];
   }
 
   sendValidOk(ws, count) {
@@ -49,25 +51,29 @@ module.exports = class Clients {
   }
 
   sendGroup(ws, rec) {
-    const other = []
-    let otherFl = 'yes';
-
-    const regexp = new RegExp(`${rec.value}`, 'g');
-    this.message.forEach((e) => {
-      if (e.type.match(regexp)) {
-        ws.send(this.jsonStr(e, rec.event));
-        otherFl = 'no'
-      }
-    })
-    if (otherFl === 'yes') {
+    if (this.knowGroup.includes(rec.value)) {
+      const regexp = new RegExp(`${rec.value}`, 'g');
       this.message.forEach((e) => {
-        if (!/txt/.test(e.type) && !/link/.test(e.type) && !/video/.test(e.type) && !/audio/.test(e.type) && !/image/.test(e.type)) {
-          other.push(e);
+        if (e.type.match(regexp)) {
+          ws.send(this.jsonStr(e, rec.event));
         }
       })
-      other.forEach((e) => ws.send(this.jsonStr(e, rec.event)))
     } else {
+      this.message.forEach((e) => {
+        if (!this.know(e.type)) {
+          ws.send(this.jsonStr(e, rec.event));
+        }
+      })
     }
+  }
+
+  know(type) {
+    for (let i = 0; i < this.knowGroup.length; i += 1) {
+      if (type.includes(this.knowGroup[i])) {
+        return true;
+      }      
+    }
+    return false;
   }
 
   sendEvent(obj) {
