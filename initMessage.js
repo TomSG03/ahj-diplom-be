@@ -15,6 +15,7 @@ module.exports = class InitMessage {
         type: 'txt',
         message: 'Окружающий мир это совокупность окружающих человека объектов живой и неживой природы, а также результатов деятельности самой человеческой цивилизации',
         favorite: 'yes',
+        geo: '101.01, 101.01'
       },
       {
         source: 'user',
@@ -492,7 +493,7 @@ module.exports = class InitMessage {
         ['type']: information[i].type,
         ['message']: information[i].message,
         ['messageName']: information[i].messageName || '',
-        ['geo']: '',
+        ['geo']: information[i].geo || '',
         ['date']: Func.getTime(),
         ['favorite']: information[i].favorite,
       });
