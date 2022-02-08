@@ -36,7 +36,6 @@ module.exports = class Clients {
   sendOldMsg(ws, event) {
     this.message.forEach((e) => { 
       ws.send(this.jsonStr(e, event))
-      console.log(e.messageName);
     });
   }
 
